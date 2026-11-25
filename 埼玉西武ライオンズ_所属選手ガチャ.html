@@ -1,0 +1,490 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>埼玉西武ライオンズ 所属選手ガチャ</title>
+  <!-- Tailwind CSS の読み込み -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  <!-- Google Fonts (Inter & Noto Sans JP) -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@600;800;900&family=Noto+Sans+JP:wght@400;500;700;900&display=swap" rel="stylesheet">
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          colors: {
+            lions: {
+              navy: '#0a1931',
+              blue: '#102a54',
+              accent: '#1d4ed8',
+              light: '#e2e8f0'
+            }
+          },
+          fontFamily: {
+            sans: ['"Noto Sans JP"', '"Inter"', 'sans-serif'],
+            display: ['"Inter"', '"Noto Sans JP"', 'sans-serif']
+          }
+        }
+      }
+    }
+  </script>
+</head>
+<body class="bg-[#0a1931] text-white min-h-screen flex flex-col justify-between selection:bg-blue-500 selection:text-white">
+
+  <!-- 背景のスポーティーな装飾ライン -->
+  <div class="fixed inset-0 pointer-events-none overflow-hidden -z-10">
+    <div class="absolute -top-24 -right-24 w-96 h-96 bg-blue-600/20 rounded-full blur-3xl"></div>
+    <div class="absolute top-1/2 -left-32 w-80 h-80 bg-indigo-500/15 rounded-full blur-3xl"></div>
+    <div class="absolute bottom-0 right-1/4 w-96 h-64 bg-sky-500/10 rounded-full blur-3xl"></div>
+  </div>
+
+  <!-- メインコンテナ -->
+  <main class="w-full max-w-5xl mx-auto px-4 py-8 sm:py-12 flex-grow flex flex-col items-center">
+
+    <!-- ヘッダーセクション -->
+    <header class="text-center w-full max-w-2xl mb-8">
+      <div class="inline-flex items-center gap-2 px-3.5 py-1 rounded-full bg-white/10 border border-white/20 text-xs sm:text-sm font-display font-bold tracking-widest text-sky-300 uppercase mb-3">
+        <span class="w-2 h-2 rounded-full bg-sky-400 animate-pulse"></span>
+        Saitama Seibu Lions Roster Gacha
+      </div>
+      <h1 class="text-3xl sm:text-5xl font-black tracking-tight text-white drop-shadow-md mb-3">
+        埼玉西武ライオンズ<br class="sm:hidden">所属選手ガチャ
+      </h1>
+      <p class="text-slate-300 text-xs sm:text-sm leading-relaxed mb-4">
+        Wikipediaの最新登録リストから選手・首脳陣をランダム抽選！<br class="hidden sm:inline">
+        記事のボリューム（バイト数）に応じて <span class="text-amber-400 font-bold">SSR</span> 〜 <span class="text-slate-300 font-bold">N</span> のレア度が決定します。
+      </p>
+
+      <!-- 読み込みステータスバッジ -->
+      <div id="statusBadge" class="inline-flex items-center gap-2 bg-[#102a54] border border-blue-400/30 px-4 py-2 rounded-xl text-xs sm:text-sm font-medium text-blue-100 shadow-inner">
+        <svg id="statusSpinner" class="animate-spin h-4 w-4 text-sky-400" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+          <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+          <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+        </svg>
+        <span id="statusText">Wikipediaから選手データを取得中...</span>
+      </div>
+    </header>
+
+    <!-- エラーメッセージ表示エリア（alertの代替） -->
+    <div id="errorBox" class="hidden w-full max-w-md mb-6 bg-red-950/80 border border-red-500/50 text-red-200 px-4 py-3 rounded-xl text-sm text-center shadow-lg">
+      <p id="errorText"></p>
+    </div>
+
+    <!-- ガチャ操作ボタンエリア -->
+    <section class="w-full max-w-lg grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4 mb-8">
+      <!-- 単発ガチャボタン -->
+      <button
+        id="singleBtn"
+        type="button"
+        disabled
+        onclick="startGacha(1)"
+        class="group relative overflow-hidden rounded-2xl bg-white text-[#0a1931] font-bold py-4 px-6 shadow-lg shadow-black/30 border-2 border-white hover:bg-slate-100 active:scale-[0.98] transition-all duration-150 disabled:opacity-40 disabled:pointer-events-none flex flex-col items-center justify-center cursor-pointer"
+      >
+        <span class="text-xs font-display tracking-wider text-blue-700 uppercase font-extrabold">1 Play</span>
+        <span class="text-lg sm:text-xl font-black tracking-tight">単発ガチャを引く</span>
+      </button>
+
+      <!-- 10連ガチャボタン -->
+      <button
+        id="tenBtn"
+        type="button"
+        disabled
+        onclick="startGacha(10)"
+        class="group relative overflow-hidden rounded-2xl bg-gradient-to-r from-blue-600 via-indigo-600 to-blue-700 text-white font-bold py-4 px-6 shadow-lg shadow-blue-600/40 border-2 border-sky-400/70 hover:brightness-110 active:scale-[0.98] transition-all duration-150 disabled:opacity-40 disabled:pointer-events-none flex flex-col items-center justify-center cursor-pointer"
+      >
+        <span class="text-xs font-display tracking-wider text-amber-300 uppercase font-extrabold">10 Plays</span>
+        <span class="text-lg sm:text-xl font-black tracking-tight">10連ガチャを引く</span>
+      </button>
+    </section>
+
+    <!-- レア度基準の凡例 -->
+    <div class="flex flex-wrap justify-center gap-2 sm:gap-3 mb-8 text-[11px] sm:text-xs font-medium text-slate-300">
+      <span class="px-2.5 py-1 rounded-lg bg-amber-500/15 border border-amber-400/40 text-amber-300">SSR: 45,000B以上</span>
+      <span class="px-2.5 py-1 rounded-lg bg-purple-500/15 border border-purple-400/40 text-purple-300">SR: 20,000B以上</span>
+      <span class="px-2.5 py-1 rounded-lg bg-blue-500/15 border border-blue-400/40 text-sky-300">R: 8,000B以上</span>
+      <span class="px-2.5 py-1 rounded-lg bg-slate-500/15 border border-slate-400/40 text-slate-300">N: 8,000B未満</span>
+    </div>
+
+    <!-- 抽選中アニメーション表示 -->
+    <div id="loadingOverlay" class="hidden w-full max-w-md py-12 flex flex-col items-center justify-center text-center">
+      <div class="w-16 h-16 rounded-full bg-white text-[#0a1931] flex items-center justify-center text-3xl shadow-xl shadow-blue-500/30 animate-bounce mb-4">
+        ⚾
+      </div>
+      <p class="text-lg font-bold tracking-wider text-white animate-pulse">選手データを抽選中...</p>
+      <p class="text-xs text-slate-400 mt-1">Wikipedia記事ボリュームを解析しています</p>
+    </div>
+
+    <!-- 単発ガチャ結果表示エリア -->
+    <section id="singleResultContainer" class="hidden w-full max-w-lg transition-all duration-300">
+      <!-- JavaScriptで動的にカードを生成 -->
+    </section>
+
+    <!-- 10連ガチャ結果表示エリア -->
+    <section id="tenResultContainer" class="hidden w-full transition-all duration-300">
+      <div class="flex items-center justify-between mb-4 px-1">
+        <h2 class="text-lg sm:text-xl font-black tracking-tight text-white flex items-center gap-2">
+          <span class="w-1.5 h-6 bg-sky-400 rounded-full inline-block"></span>
+          10連ガチャ抽選結果
+        </h2>
+        <span id="tenSummaryBadge" class="text-xs sm:text-sm font-bold text-sky-300 bg-white/10 px-3 py-1 rounded-full"></span>
+      </div>
+      <div id="tenCardsGrid" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-3 sm:gap-4">
+        <!-- JavaScriptで10枚のカードを動的に生成 -->
+      </div>
+    </section>
+
+  </main>
+
+  <!-- フッター -->
+  <footer class="w-full border-t border-white/10 py-6 px-4 text-center text-xs text-slate-400">
+    <p>データ出典: 日本語版 Wikipedia API（Template:埼玉西武ライオンズの選手・スタッフ）</p>
+    <p class="mt-1">※本アプリはファンメイドの非公式Webアプリです。</p>
+  </footer>
+
+  <script>
+    // 取得した選手・スタッフ名のリストを保持する配列
+    let rosterList = [];
+    // ガチャ実行中フラグ
+    let isDrawing = false;
+
+    // 初期データ取得用Wikipedia API URL
+    const ROSTER_API_URL = 'https://ja.wikipedia.org/w/api.php?action=query&titles=Template:%E5%9F%BC%E7%8E%89%E8%A5%BF%E6%AD%A6%E3%83%A9%E3%82%A4%E3%82%AA%E3%83%B3%E3%82%BA%E3%81%AE%E9%81%B8%E6%89%8B%E3%83%BB%E3%82%B9%E3%82%BF%E3%83%83%E3%83%95&prop=links&pllimit=500&plnamespace=0&format=json&origin=*';
+
+    /**
+     * 起動時にWikipediaテンプレートから選手・スタッフ一覧を取得する
+     */
+    async function fetchRoster() {
+      try {
+        const response = await fetch(ROSTER_API_URL);
+        if (!response.ok) {
+          throw new Error('ネットワーク応答が正常ではありませんでした');
+        }
+        const data = await response.json();
+        const pages = data?.query?.pages;
+        if (!pages) {
+          throw new Error('ページデータの取得に失敗しました');
+        }
+
+        const pageId = Object.keys(pages)[0];
+        const links = pages[pageId]?.links || [];
+
+        // 球団名やTemplateなどを除外して純粋な選手・スタッフ名リストを作成
+        rosterList = links
+          .map(item => item.title)
+          .filter(title => {
+            return !title.includes('ライオンズ') &&
+                   !title.includes('Template') &&
+                   !title.includes('パシフィック・リーグ') &&
+                   !title.includes('日本プロ野球');
+          });
+
+        if (rosterList.length === 0) {
+          throw new Error('有効な選手データが見つかりませんでした');
+        }
+
+        // ステータス表示を更新し、ボタンを有効化
+        document.getElementById('statusSpinner').classList.add('hidden');
+        document.getElementById('statusText').innerHTML = `登録リスト <strong class="text-white font-display text-base mx-0.5">${rosterList.length}</strong> 名から抽選（Wikipedia連動）`;
+        document.getElementById('singleBtn').disabled = false;
+        document.getElementById('tenBtn').disabled = false;
+
+      } catch (error) {
+        console.error('Roster fetch error:', error);
+        document.getElementById('statusSpinner').classList.add('hidden');
+        document.getElementById('statusText').textContent = 'データ読み込みエラー';
+        showError('Wikipediaからの選手一覧取得に失敗しました。通信環境を確認してページを再読み込みしてください。');
+      }
+    }
+
+    /**
+     * エラーメッセージを表示する（alertの代替）
+     */
+    function showError(message) {
+      const errorBox = document.getElementById('errorBox');
+      const errorText = document.getElementById('errorText');
+      errorText.textContent = message;
+      errorBox.classList.remove('hidden');
+    }
+
+    /**
+     * エラーメッセージを非表示にする
+     */
+    function hideError() {
+      document.getElementById('errorBox').classList.add('hidden');
+    }
+
+    /**
+     * 記事のバイト数（page.length）からレア度とスタイル設定を返す
+     */
+    function evaluateRarity(byteLength) {
+      const len = byteLength || 0;
+      if (len >= 45000) {
+        return {
+          rank: 'SSR',
+          label: '★ SSR ★',
+          cardBorder: 'border-amber-400 ring-4 ring-amber-400/30 shadow-2xl shadow-amber-500/30',
+          headerBg: 'bg-gradient-to-r from-amber-500 via-yellow-400 to-amber-500 text-slate-950',
+          badgeBg: 'bg-amber-100 text-amber-800 border-amber-300',
+          rankText: 'text-amber-500 drop-shadow-sm',
+          btnBg: 'bg-gradient-to-r from-amber-500 to-yellow-500 text-slate-950 hover:from-amber-400 hover:to-yellow-400'
+        };
+      } else if (len >= 20000) {
+        return {
+          rank: 'SR',
+          label: '★ SR ★',
+          cardBorder: 'border-purple-400 ring-2 ring-purple-400/30 shadow-xl shadow-purple-500/20',
+          headerBg: 'bg-gradient-to-r from-purple-600 via-fuchsia-600 to-purple-600 text-white',
+          badgeBg: 'bg-purple-100 text-purple-800 border-purple-300',
+          rankText: 'text-purple-600',
+          btnBg: 'bg-purple-600 text-white hover:bg-purple-700'
+        };
+      } else if (len >= 8000) {
+        return {
+          rank: 'R',
+          label: '★ R ★',
+          cardBorder: 'border-blue-400 shadow-xl shadow-blue-500/20',
+          headerBg: 'bg-gradient-to-r from-blue-600 to-sky-500 text-white',
+          badgeBg: 'bg-blue-100 text-blue-800 border-blue-300',
+          rankText: 'text-blue-600',
+          btnBg: 'bg-[#0a1931] text-white hover:bg-blue-900'
+        };
+      } else {
+        return {
+          rank: 'N',
+          label: 'N',
+          cardBorder: 'border-slate-300 shadow-lg',
+          headerBg: 'bg-slate-600 text-white',
+          badgeBg: 'bg-slate-100 text-slate-700 border-slate-300',
+          rankText: 'text-slate-500',
+          btnBg: 'bg-slate-700 text-white hover:bg-slate-800'
+        };
+      }
+    }
+
+    /**
+     * HTMLエスケープ処理（XSS対策）
+     */
+    function escapeHtml(str) {
+      if (!str) return '';
+      return str
+        .replace(/&/g, '&amp;')
+        .replace(/</g, '&lt;')
+        .replace(/>/g, '&gt;')
+        .replace(/"/g, '&quot;')
+        .replace(/'/g, '&#039;');
+    }
+
+    /**
+     * ガチャを実行するメイン関数
+     * @param {number} count - 抽選回数（1 または 10）
+     */
+    async function startGacha(count) {
+      if (isDrawing || rosterList.length === 0) return;
+
+      isDrawing = true;
+      hideError();
+
+      const singleBtn = document.getElementById('singleBtn');
+      const tenBtn = document.getElementById('tenBtn');
+      const loadingOverlay = document.getElementById('loadingOverlay');
+      const singleContainer = document.getElementById('singleResultContainer');
+      const tenContainer = document.getElementById('tenResultContainer');
+
+      // UIを抽選中状態に切り替え
+      singleBtn.disabled = true;
+      tenBtn.disabled = true;
+      singleContainer.classList.add('hidden');
+      tenContainer.classList.add('hidden');
+      loadingOverlay.classList.remove('hidden');
+
+      try {
+        // 指定回数分ランダムに選手名を選出
+        const drawnTitles = [];
+        for (let i = 0; i < count; i++) {
+          const randomIndex = Math.floor(Math.random() * rosterList.length);
+          drawnTitles.push(rosterList[randomIndex]);
+        }
+
+        // APIリクエスト効率化のため重複を除いたタイトル一覧を作成
+        const uniqueTitles = [...new Set(drawnTitles)];
+        const titlesParam = uniqueTitles.map(t => encodeURIComponent(t)).join('|');
+
+        // 単発の場合は冒頭解説文(extracts)も取得、10連の場合は記事情報(info)を取得
+        const propParam = count === 1 ? 'info|extracts&exintro=1&explaintext=1&exchars=140' : 'info';
+        const infoUrl = `https://ja.wikipedia.org/w/api.php?action=query&titles=${titlesParam}&prop=${propParam}&format=json&origin=*`;
+
+        // 演出用の最低待機時間（400ms）とAPI通信を並行実行
+        const [response] = await Promise.all([
+          fetch(infoUrl),
+          new Promise(resolve => setTimeout(resolve, 400))
+        ]);
+
+        if (!response.ok) {
+          throw new Error('記事情報の取得に失敗しました');
+        }
+
+        const data = await response.json();
+        const pages = data?.query?.pages || {};
+
+        // タイトルをキーにしてページ情報をマッピング
+        const pageMap = {};
+        Object.values(pages).forEach(page => {
+          pageMap[page.title] = page;
+        });
+
+        // 抽選された順番通りに結果配列を構築
+        const results = drawnTitles.map(title => {
+          const pageInfo = pageMap[title] || { title: title, length: 0, extract: '' };
+          return {
+            title: pageInfo.title,
+            length: pageInfo.length || 0,
+            extract: pageInfo.extract || '',
+            url: `https://ja.wikipedia.org/wiki/${encodeURIComponent(pageInfo.title)}`,
+            rarity: evaluateRarity(pageInfo.length || 0)
+          };
+        });
+
+        // 結果を描画
+        loadingOverlay.classList.add('hidden');
+        if (count === 1) {
+          renderSingleResult(results[0]);
+        } else {
+          renderTenResults(results);
+        }
+
+      } catch (error) {
+        console.error('Gacha error:', error);
+        loadingOverlay.classList.add('hidden');
+        showError('選手データの取得中にエラーが発生しました。もう一度お試しください。');
+      } finally {
+        isDrawing = false;
+        singleBtn.disabled = false;
+        tenBtn.disabled = false;
+      }
+    }
+
+    /**
+     * 単発ガチャの結果カードを描画する
+     */
+    function renderSingleResult(item) {
+      const container = document.getElementById('singleResultContainer');
+      const r = item.rarity;
+
+      const extractHtml = item.extract
+        ? `<div class="mt-4 p-4 rounded-xl bg-slate-50 border border-slate-200/80 text-left text-xs sm:text-sm text-slate-600 leading-relaxed">
+             ${escapeHtml(item.extract)}
+           </div>`
+        : '';
+
+      container.innerHTML = `
+        <div class="bg-white text-slate-900 rounded-3xl overflow-hidden border-2 ${r.cardBorder} transition-all">
+          <!-- カード上部レア度帯 -->
+          <div class="${r.headerBg} py-2.5 px-4 text-center font-display font-black tracking-widest text-sm sm:text-base uppercase">
+            ${r.label}
+          </div>
+
+          <!-- カード本体 -->
+          <div class="p-6 sm:p-8 text-center">
+            <div class="inline-block px-3 py-1 rounded-full text-xs font-bold border ${r.badgeBg} mb-2">
+              SAITAMA SEIBU LIONS
+            </div>
+
+            <div class="text-4xl sm:text-5xl font-display font-black tracking-tight ${r.rankText} my-1">
+              ${r.rank}
+            </div>
+
+            <h2 class="text-2xl sm:text-4xl font-black text-[#0a1931] tracking-tight my-3">
+              ${escapeHtml(item.title)}
+            </h2>
+
+            <p class="text-xs sm:text-sm font-medium text-slate-500">
+              Wikipedia記事ボリューム: <span class="font-display font-bold text-slate-700">${item.length.toLocaleString()}</span> バイト
+            </p>
+
+            ${extractHtml}
+
+            <div class="mt-6">
+              <a
+                href="${item.url}"
+                target="_blank"
+                rel="noopener noreferrer"
+                class="inline-flex items-center justify-center gap-2 w-full sm:w-auto px-6 py-3.5 rounded-xl font-bold text-sm sm:text-base shadow-md transition-all ${r.btnBg}"
+              >
+                <span>Wikipediaで選手ページを見る</span>
+                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14"></path>
+                </svg>
+              </a>
+            </div>
+          </div>
+        </div>
+      `;
+
+      container.classList.remove('hidden');
+    }
+
+    /**
+     * 10連ガチャの結果カード一覧を描画する
+     */
+    function renderTenResults(items) {
+      const container = document.getElementById('tenResultContainer');
+      const grid = document.getElementById('tenCardsGrid');
+      const summaryBadge = document.getElementById('tenSummaryBadge');
+
+      // レア度別の排出数を集計
+      const counts = { SSR: 0, SR: 0, R: 0, N: 0 };
+      items.forEach(item => {
+        counts[item.rarity.rank]++;
+      });
+
+      summaryBadge.textContent = `SSR:${counts.SSR} / SR:${counts.SR} / R:${counts.R} / N:${counts.N}`;
+
+      // 10枚のカードHTMLを生成（カード全体をクリック可能なリンクに設定）
+      grid.innerHTML = items.map((item, idx) => {
+        const r = item.rarity;
+        return `
+          <a
+            href="${item.url}"
+            target="_blank"
+            rel="noopener noreferrer"
+            class="group bg-white text-slate-900 rounded-2xl overflow-hidden border-2 ${r.cardBorder} flex flex-col justify-between hover:-translate-y-1 transition-all duration-200"
+          >
+            <div>
+              <div class="${r.headerBg} py-1.5 px-3 flex items-center justify-between text-xs font-display font-black tracking-wider">
+                <span>#${idx + 1}</span>
+                <span>${r.label}</span>
+              </div>
+              <div class="p-4 text-center">
+                <div class="text-xs font-display font-extrabold ${r.rankText} mb-1">
+                  ${r.rank}
+                </div>
+                <h3 class="text-base sm:text-lg font-black text-[#0a1931] group-hover:text-blue-700 transition-colors line-clamp-1">
+                  ${escapeHtml(item.title)}
+                </h3>
+                <p class="text-[11px] text-slate-500 mt-1.5 font-medium">
+                  ${item.length.toLocaleString()} バイト
+                </p>
+              </div>
+            </div>
+            <div class="px-3 pb-3 pt-1 text-center">
+              <span class="inline-flex items-center justify-center gap-1 w-full py-1.5 px-2 rounded-lg text-[11px] font-bold bg-slate-100 text-[#0a1931] group-hover:bg-[#0a1931] group-hover:text-white transition-colors">
+                <span>Wikipediaを見る</span>
+                <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14"></path>
+                </svg>
+              </span>
+            </div>
+          </a>
+        `;
+      }).join('');
+
+      container.classList.remove('hidden');
+    }
+
+    // ページ読み込み完了時に選手データを取得
+    window.addEventListener('DOMContentLoaded', fetchRoster);
+  </script>
+</body>
+</html>
